@@ -1,0 +1,1 @@
+It is a game where you can play with characters and fight against villains. There are different levels and at each level each villain increases their number of lives. Whoever manages to eliminate the other in first place wins.
