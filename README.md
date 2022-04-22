@@ -1,0 +1,2 @@
+# HeroGon
+Simple battle game
