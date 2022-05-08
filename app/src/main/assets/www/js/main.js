@@ -1,7 +1,7 @@
 class SpaceScene extends Phaser.Scene
 {
-	constructor() {
-		super();
+    constructor() {
+        super();
         this.phaseConfig;
 
         this.hero;
@@ -14,22 +14,26 @@ class SpaceScene extends Phaser.Scene
         this.villainLifesLength;
         this.heroLifeStatus = 1;
         this.villainLifeStatus = 1;
-	}
+
+        this.gameOverMessage;
+        this.wonMessage;
+        this.restartButton;
+    }
 
     shootHeroLaser() {
-		if (this.heroLaser.y < this.villain.y) {
-		    this.heroLaser.body.reset(this.hero.x, this.hero.y - 20);
-		    this.heroLaser.setVisible(true);
-		    this.heroLaser.setVelocityY(-900);
-		}
+        if (this.heroLaser.y < this.villain.y) {
+            this.heroLaser.body.reset(this.hero.x, this.hero.y - 20);
+            this.heroLaser.setVisible(true);
+            this.heroLaser.setVelocityY(-900);
+        }
     }
 
     shootVillainLaser() {
-		if (this.villainLaser.y > this.hero.y) {
-		    this.villainLaser.body.reset(this.villain.x, this.villain.y - 20);
-		    this.villainLaser.setVisible(true);
-		    this.villainLaser.setVelocityY(900);
-		}
+        if (this.villainLaser.y > this.hero.y) {
+            this.villainLaser.body.reset(this.villain.x, this.villain.y - 20);
+            this.villainLaser.setVisible(true);
+            this.villainLaser.setVelocityY(900);
+        }
     }
 
     hitHero() {
@@ -40,6 +44,8 @@ class SpaceScene extends Phaser.Scene
             if (this.heroLifesLength == 0) {
                 this.gameOver = true;
                 this.physics.pause();
+                this.gameOverMessage.setVisible(true);
+                this.restartButton.setVisible(true);
             } else {
                 this.time.addEvent({
                     delay: 2000,
@@ -58,11 +64,14 @@ class SpaceScene extends Phaser.Scene
             this.villainLifes[this.villainLifesLength].setVisible(false);
             if (this.villainLifesLength == 0) {
                 if (this.phaseConfig.id < numPhases) {
+                    this.resetScene();
                     this.scene.stop();
                     this.scene.start('phase_' + (this.phaseConfig.id + 1));
                 } else {
                     this.gameOver = true;
                     this.physics.pause();
+                    this.wonMessage.setVisible(true);
+                    this.restartButton.setVisible(true);
                 }
             } else {
                 this.time.addEvent({
@@ -78,7 +87,7 @@ class SpaceScene extends Phaser.Scene
     resurrectHero() {
         var camera = this.cameras.main;
         this.hero.setVelocityY(0);
-		this.hero.x = camera.width / 2;
+        this.hero.x = camera.width / 2;
         this.hero.y = camera.height - 90;
         this.heroLifeStatus = 1;
     }
@@ -87,41 +96,66 @@ class SpaceScene extends Phaser.Scene
         var camera = this.cameras.main;
         this.villain.setVelocityY(0);
         this.villain.setVelocityX(400);
-		this.villain.x = camera.width / 2;
+        this.villain.x = camera.width / 2;
         this.villain.y = 90;
         this.villainLifeStatus = 1;
+    }
+
+    resetScene() {
+        this.villainLifeStatus = 1;
+        this.heroLifeStatus = 1;
+        this.villainLifesLength = this.villainLifes.length;
+        this.heroLifesLength = this.heroLifes.length;
+        for (var i = 0; i < this.villainLifesLength; i++) {
+            this.villainLifes[i].setVisible(true);
+        }
+        for (var i = 0; i < this.heroLifesLength; i++) {
+            this.heroLifes[i].setVisible(true);
+        }
+        this.gameOver = false;
+        this.gameOverMessage.setVisible(false);
+        this.wonMessage.setVisible(false);
+        this.restartButton.setVisible(false);
+    }
+
+    restartGame() {
+        this.resetScene();
+        this.scene.stop();
+        this.scene.start('phase_1');
+        this.physics.resume();
     }
 
     init(phaseConfig) {
         this.phaseConfig = phaseConfig; 
     }
 
-	preload() {
-		this.load.spritesheet('img_' + this.phaseConfig.id + '_hero', this.phaseConfig.heroImage, { frameWidth: 99, frameHeight: 75});
-		this.load.image('img_' + this.phaseConfig.id + '_villain', this.phaseConfig.villainImage);
-		this.load.image('heroLaser', './img/heroLaser.png');
-		this.load.image('villainLaser', './img/villainLaser.png');
-		this.load.image('heroLife', './img/life.png');
-		this.load.image('villainLife', './img/life.png');
-	}
+    preload() {
+        this.load.spritesheet('img_' + this.phaseConfig.id + '_hero', this.phaseConfig.heroImage, { frameWidth: 99, frameHeight: 75});
+        this.load.image('img_' + this.phaseConfig.id + '_villain', this.phaseConfig.villainImage);
+        this.load.image('heroLaser', './img/heroLaser.png');
+        this.load.image('villainLaser', './img/villainLaser.png');
+        this.load.image('heroLife', './img/life.png');
+        this.load.image('villainLife', './img/life.png');
+        this.load.image('restartButton', './img/restart.png');
+    }
 
-	create() {
+    create() {
         var camera = this.cameras.main;
-		camera.setBackgroundColor(0x555555);
+        camera.setBackgroundColor(0x555555);
 
         this.physics.world.checkCollision.up = false;
         this.physics.world.checkCollision.down = false;
 
         this.heroFrame = 0;
-		this.hero = this.physics.add.sprite(camera.width / 2, camera.height - 90, 'img_' + this.phaseConfig.id + '_hero', this.heroFrame);
-		this.villain = this.physics.add.image(camera.width / 2, 90, 'img_' + this.phaseConfig.id + '_villain');
+        this.hero = this.physics.add.sprite(camera.width / 2, camera.height - 90, 'img_' + this.phaseConfig.id + '_hero', this.heroFrame);
+        this.villain = this.physics.add.image(camera.width / 2, 90, 'img_' + this.phaseConfig.id + '_villain');
         this.villain.setCollideWorldBounds(true);
         this.villain.setBounce(1);
         this.villain.setVelocityX(400);
-		this.heroLaser = this.physics.add.image(camera.width / 2, 0, 'heroLaser');
-		this.heroLaser.setVisible(false);
-		this.villainLaser = this.physics.add.image(camera.width / 2, camera.height, 'villainLaser');
-		this.villainLaser.setVisible(false);
+        this.heroLaser = this.physics.add.image(camera.width / 2, 0, 'heroLaser');
+        this.heroLaser.setVisible(false);
+        this.villainLaser = this.physics.add.image(camera.width / 2, camera.height, 'villainLaser');
+        this.villainLaser.setVisible(false);
 
         this.heroLifes = [];
         for (var i = 0; i < this.phaseConfig.heroLifes; i++) {
@@ -137,18 +171,18 @@ class SpaceScene extends Phaser.Scene
         this.physics.add.collider(this.villain, this.heroLaser, this.hitVillain, null, this);
         this.physics.add.collider(this.hero, this.villainLaser, this.hitHero, null, this);
 
-	    this.input.on('pointermove', pointer => {
+        this.input.on('pointermove', pointer => {
             if (this.gameOver) return;
-		    this.hero.x = pointer.x;
-	    });
-       	this.input.on('pointerdown', pointer => {
+            this.hero.x = pointer.x;
+        });
+        this.input.on('pointerdown', pointer => {
             if (this.gameOver) return;
-       		this.shootHeroLaser();
-       	});
+            this.shootHeroLaser();
+        });
         var shootKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
         shootKey.on('down', event => {
             if (this.gameOver) return;
-	    	this.shootHeroLaser();
+            this.shootHeroLaser();
         });
         var skinChangeLeftKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.LEFT);
         skinChangeLeftKey.on('down', event => {
@@ -169,20 +203,29 @@ class SpaceScene extends Phaser.Scene
             callbackScope: this,
             loop: true
         });
-	}
+
+        this.gameOverMessage = this.add.text(camera.width / 2 - 45, camera.height / 2 - 60, "Game Over!");
+        this.gameOverMessage.setVisible(false);
+        this.wonMessage = this.add.text(camera.width / 2 - 40, camera.height / 2 - 60, "You won!");
+        this.wonMessage.setVisible(false);
+        this.restartButton = this.add.image(camera.width / 2, camera.height / 2, 'restartButton');
+        this.restartButton.setInteractive();
+        this.restartButton.on('pointerdown', this.restartGame, this);
+        this.restartButton.setVisible(false);
+    }
 }
 
 const config = {
-	type: Phaser.AUTO,
-	width: 450,
-	height: 700,
-	physics: {
-		default: 'arcade',
-		arcade: {
-			debug: false,
-			gravity: { y: 0 }
-		}
-	},
+    type: Phaser.AUTO,
+    width: 450,
+    height: 700,
+    physics: {
+        default: 'arcade',
+        arcade: {
+            debug: false,
+            gravity: { y: 0 }
+        }
+    },
 };
 
 let game = new Phaser.Game(config);
